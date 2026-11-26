@@ -15,12 +15,12 @@ const helmet = require("helmet");
 const app = express();
 const isNetlify = Boolean(process.env.NETLIFY);
 const isProduction = process.env.NODE_ENV === "production" || isNetlify;
-const port = Number(process.env.PORT || 3000);
+const port = Number(process.env.PORT);
 const mongoUri = process.env.MONGODB_URI || "";
 const databaseName = process.env.MONGODB_DB_NAME || "edgevault";
 const sessionSecret = process.env.SESSION_SECRET || "";
 const cookieSameSite = (process.env.COOKIE_SAME_SITE || "lax").toLowerCase();
-const allowedOrigins = new Set((process.env.FRONTEND_ORIGINS || "http://localhost:3000,http://127.0.0.1:3000")
+const allowedOrigins = new Set((process.env.FRONTEND_ORIGINS || "http://localhost:3000,http://127.0.0.1:8000")
   .split(",").map(origin => origin.trim()).filter(Boolean));
 const SESSION_COOKIE = "edgevault.sid";
 const MAX_JOURNAL_BYTES = 4 * 1024 * 1024;

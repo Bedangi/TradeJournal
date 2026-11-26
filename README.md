@@ -6,7 +6,7 @@ EdgeVault is a static trading journal with an Express API, MongoDB-backed accoun
 
 1. Install dependencies with `npm install`.
 2. Copy `.env.example` to `.env` and set `MONGODB_URI`, `MONGODB_DB_NAME`, and a long random `SESSION_SECRET`.
-3. Start the app with `npm start`, then open `http://localhost:3000`.
+3. Start the app with `npm start`, then open `http://localhost:<PORT>`.
 
 The local Express server serves the frontend and API together. Journal data is stored as a JSON document per user in MongoDB; the required database and indexes are created when the API initializes. Keep `.env` private and never commit it.
 
