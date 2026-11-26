@@ -1,0 +1,30 @@
+[build]
+  command = "npm run check"
+  publish = "."
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = [
+    "bcryptjs",
+    "connect-mongo",
+    "cors",
+    "dotenv",
+    "express",
+    "express-rate-limit",
+    "express-session",
+    "helmet",
+    "mongodb",
+    "serverless-http"
+  ]
+
+[[redirects]]
+  from = "/api"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true

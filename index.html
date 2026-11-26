@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b1018">
+    <meta name="description" content="EdgeVault is a private trading journal for tracking strategies, trades, and performance.">
+    <title>EdgeVault — Trading journal</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <section class="auth-screen" id="authScreen">
+      <div class="auth-card">
+        <a class="brand auth-brand" href="#overview" aria-label="EdgeVault home">
+          <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span>edge<span class="brand-light">vault</span></span>
+        </a>
+        <p class="eyebrow">YOUR PRIVATE TRADING WORKSPACE</p>
+        <h1 id="authHeading">Sign in<span class="heading-dot">.</span></h1>
+        <p class="auth-description">Sign in to sync your journal securely across your devices.</p>
+        <div class="auth-tabs" role="tablist" aria-label="Account access">
+          <button type="button" id="signInTab" class="auth-tab active" role="tab" aria-selected="true">Sign in</button>
+          <button type="button" id="signUpTab" class="auth-tab" role="tab" aria-selected="false">Create account</button>
+        </div>
+        <form id="signInForm" class="auth-form">
+          <label class="field">Email address<input name="email" type="email" required maxlength="254" autocomplete="email" placeholder="you@example.com"></label>
+          <label class="field">Password<input name="password" type="password" required maxlength="72" autocomplete="current-password" placeholder="Your password"></label>
+          <button class="button button-primary auth-submit" type="submit">Sign in <span>→</span></button>
+        </form>
+        <form id="signUpForm" class="auth-form" hidden>
+          <label class="field">Email address<input name="email" type="email" required maxlength="254" autocomplete="email" placeholder="you@example.com"></label>
+          <label class="field">Password <span class="optional">(at least 12 characters)</span><input name="password" type="password" required minlength="12" maxlength="72" autocomplete="new-password" placeholder="Create a strong password"></label>
+          <label class="field">Confirm password<input name="confirmPassword" type="password" required minlength="12" maxlength="72" autocomplete="new-password" placeholder="Enter your password again"></label>
+          <button class="button button-primary auth-submit" type="submit">Create account <span>→</span></button>
+        </form>
+        <div class="auth-message" id="authMessage" role="status" aria-live="polite"></div>
+        <p class="auth-connection" id="authConnectionNote">Connecting to the EdgeVault API…</p>
+        <button class="text-button auth-retry" type="button" id="retryConnection">Retry connection</button>
+        <p class="auth-privacy">Your journal is stored in your account's private MongoDB document.</p>
+      </div>
+    </section>
+
+    <div class="app-shell" id="appShell" hidden>
+      <aside class="sidebar" id="sidebar">
+        <a class="brand" href="#" aria-label="EdgeVault home">
+          <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span>edge<span class="brand-light">vault</span></span>
+        </a>
+        <div class="workspace-label">WORKSPACE</div>
+        <nav class="main-nav" aria-label="Main navigation">
+          <a class="nav-link active" href="#overview" data-view="overview" aria-current="page"><span class="nav-icon">◫</span>Overview</a>
+          <a class="nav-link" href="#trade-journal" data-view="trade-journal"><span class="nav-icon">↗</span>Trade journal</a>
+          <a class="nav-link" href="#strategy-library" data-view="strategy-library"><span class="nav-icon">⌘</span>Strategies</a>
+          <a class="nav-link" href="#prop-rules" data-view="prop-rules"><span class="nav-icon">◇</span>Prop rules</a>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="private-card">
+            <span class="private-icon">◈</span>
+            <strong>Your edge, protected.</strong>
+            <span>Your trade journal syncs privately to your account.</span>
+          </div>
+          <div class="profile">
+            <div class="avatar">EV</div>
+            <div><strong>My workspace</strong><span id="sidebarUserEmail">Cloud journal</span></div>
+            <span class="profile-more">···</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <button class="mobile-menu icon-button" id="menuToggle" aria-label="Toggle navigation">☰</button>
+          <div class="breadcrumb"><span>Workspace</span><span class="crumb-divider">/</span><strong id="breadcrumbCurrent">Overview</strong></div>
+          <div class="top-actions">
+            <button class="local-status" id="syncStatus" type="button" title="Click to retry cloud sync"><i></i><span id="syncStatusText">Connecting…</span></button>
+            <span class="account-email" id="accountEmail"></span>
+            <button class="button button-secondary button-small" id="logoutButton" type="button">Sign out</button>
+            <button class="button button-primary button-small" id="addTradeTop"><span>＋</span> Add trade</button>
+          </div>
+        </header>
+
+        <section class="page-content page-view" id="page-overview" data-page="overview">
+          <section class="page-heading">
+            <div>
+              <p class="eyebrow" id="todayLabel">YOUR TRADING DESK</p>
+              <h1>Overview<span class="heading-dot">.</span></h1>
+              <p class="subheading">A clearer view of your decisions, one trade at a time.</p>
+            </div>
+            <div class="heading-actions">
+              <button class="button button-secondary" id="importButton"><span class="button-symbol">↥</span> Import backup</button>
+              <button class="button button-secondary" id="exportButton"><span class="button-symbol">↧</span> Export JSON</button>
+              <button class="button button-primary" id="exportWorkbook"><span class="button-symbol">▦</span> Export 3-tab Excel (.xlsx)</button>
+              <input type="file" id="importFile" accept=".json,application/json" hidden>
+            </div>
+          </section>
+
+          <section class="dashboard-filters panel" aria-label="Dashboard filters">
+            <label>Account mode<select id="dashboardMode"><option value="all">All modes</option><option>Backtest</option><option>Demo</option><option>Eval</option><option>Funded</option></select></label>
+            <label>Strategy<select id="dashboardStrategy"><option value="all">All strategies</option></select></label>
+            <label>Session<select id="dashboardSession"><option value="all">All sessions</option></select></label>
+            <label>Month<input id="dashboardMonth" type="month"></label>
+          </section>
+
+          <section class="stat-grid" aria-label="Trading performance">
+            <article class="stat-card">
+              <div class="stat-top"><span class="stat-label">Net P&amp;L</span><span class="stat-icon mint">↗</span></div>
+              <div class="stat-value" id="netPnl">$0.00</div>
+              <div class="stat-foot"><span class="muted">After costs</span><span class="period-label">FILTERED</span></div>
+            </article>
+            <article class="stat-card">
+              <div class="stat-top"><span class="stat-label">Win rate</span><span class="stat-icon blue">◉</span></div>
+              <div class="stat-value" id="winRate">—<small>%</small></div>
+              <div class="stat-foot"><span class="muted" id="winCount">No closed trades yet</span><span class="period-label">FILTERED</span></div>
+            </article>
+            <article class="stat-card">
+              <div class="stat-top"><span class="stat-label">Average R</span><span class="stat-icon violet">R</span></div>
+              <div class="stat-value" id="expectancy">—</div>
+              <div class="stat-foot"><span class="muted">Expectancy per trade</span><span class="period-label">FILTERED</span></div>
+            </article>
+            <article class="stat-card">
+              <div class="stat-top"><span class="stat-label">Profit factor</span><span class="stat-icon amber">∑</span></div>
+              <div class="stat-value" id="profitFactor">—</div>
+              <div class="stat-foot"><span class="muted">Gross wins ÷ gross losses</span><span class="period-label">FILTERED</span></div>
+            </article>
+            <article class="stat-card">
+              <div class="stat-top"><span class="stat-label">Max loss streak</span><span class="stat-icon red">↘</span></div>
+              <div class="stat-value" id="maxLossStreak">0</div>
+              <div class="stat-foot"><span class="muted">Consecutive losing trades</span><span class="period-label">FILTERED</span></div>
+            </article>
+            <article class="stat-card">
+              <div class="stat-top"><span class="stat-label">Max drawdown</span><span class="stat-icon amber">⌁</span></div>
+              <div class="stat-value" id="maxDrawdown">$0.00</div>
+              <div class="stat-foot"><span class="muted">Peak-to-trough</span><span class="period-label">FILTERED</span></div>
+            </article>
+          </section>
+
+          <section class="content-grid">
+            <article class="panel performance-panel">
+              <div class="panel-heading">
+                <div><h2>Performance</h2><p>Cumulative realized P&amp;L over time</p></div>
+                <span class="chart-period">FILTERED VIEW</span>
+              </div>
+              <div class="chart-wrap" id="chartWrap">
+                <div class="chart-empty" id="chartEmpty">
+                  <div class="empty-chart-icon">⌁</div>
+                  <strong>Your performance story starts here</strong>
+                  <span>Log a closed trade to see your P&amp;L trend.</span>
+                </div>
+                <svg id="performanceChart" viewBox="0 0 720 190" preserveAspectRatio="none" role="img" aria-label="Cumulative profit and loss chart" hidden></svg>
+              </div>
+              <div class="chart-legend"><span><i></i> Cumulative P&amp;L</span><span id="chartTotal">$0.00 total</span></div>
+            </article>
+
+            <article class="panel strategy-panel">
+              <div class="panel-heading">
+                <div><h2>Strategy breakdown</h2><p>Results by playbook</p></div>
+                <button class="text-button" data-navigate="strategy-library">Manage <span>→</span></button>
+              </div>
+              <div class="strategy-list" id="strategyList"></div>
+            </article>
+          </section>
+
+          <section class="panel journal-panel">
+            <div class="journal-heading">
+              <div><h2>Recent trades</h2><p>Your latest activity at a glance</p></div>
+              <div class="journal-tools">
+                <label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Search trades..." aria-label="Search trades"></label>
+                <select id="sideFilter" class="filter-select" aria-label="Filter by direction">
+                  <option value="all">All sides</option><option value="Long">Long</option><option value="Short">Short</option>
+                </select>
+                <button class="button button-primary button-small" id="addTradeButton"><span>＋</span> Add trade</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>ASSET</th><th>DATE</th><th>SIDE</th><th>STRATEGY</th><th>ENTRY → EXIT</th><th>NET P&amp;L</th><th></th></tr></thead>
+                <tbody id="tradeRows"></tbody>
+              </table>
+              <div class="empty-state" id="tradeEmpty">
+                <div class="empty-state-mark">↗</div>
+                <strong>No trades to show</strong>
+                <span>Add your first trade to start building your journal.</span>
+                <button class="button button-secondary button-small" id="addFirstTrade">＋ Log your first trade</button>
+              </div>
+              <div class="no-results" id="noResults" hidden>No trades match your search.</div>
+            </div>
+            <div class="table-footer"><span id="tradeCountLabel">Showing 0 trades</span><span>Private by design <b>·</b> Cloud-synced</span></div>
+          </section>
+          <section class="panel breakdown-panel">
+            <div class="panel-heading"><div><h2>Performance by category</h2><p>Explore your results by strategy, session, and account mode.</p></div></div>
+            <div class="breakdown-grid">
+              <div><h3>Strategy</h3><div class="mini-table-wrap"><table class="mini-table"><thead><tr><th>SETUP</th><th>TRADES</th><th>AVG R</th><th>NET P&amp;L</th></tr></thead><tbody id="strategyBreakdown"></tbody></table></div></div>
+              <div><h3>Session</h3><div class="mini-table-wrap"><table class="mini-table"><thead><tr><th>SESSION</th><th>TRADES</th><th>AVG R</th><th>NET P&amp;L</th></tr></thead><tbody id="sessionBreakdown"></tbody></table></div></div>
+              <div><h3>Account mode</h3><div class="mini-table-wrap"><table class="mini-table"><thead><tr><th>MODE</th><th>TRADES</th><th>AVG R</th><th>NET P&amp;L</th></tr></thead><tbody id="modeBreakdown"></tbody></table></div></div>
+            </div>
+          </section>
+          <footer class="footer"><span>EDGEVAULT <b>·</b> YOUR PROCESS, COMPOUNDED.</span><span>Made for thoughtful trading.</span></footer>
+        </section>
+
+        <section class="page-content page-view" id="page-trade-journal" data-page="trade-journal" hidden>
+          <section class="page-heading">
+            <div><p class="eyebrow">YOUR RAW DATA</p><h1>Trade journal<span class="heading-dot">.</span></h1><p class="subheading">One complete record for every trade. Use filters to find patterns.</p></div>
+            <div class="heading-actions"><button class="button button-primary" data-add-trade><span>＋</span> Add trade</button></div>
+          </section>
+          <section class="journal-filterbar panel">
+            <label class="search-box"><span>⌕</span><input id="journalSearch" type="search" placeholder="Search instrument, setup, notes..." aria-label="Search journal"></label>
+            <label>Mode<select id="journalModeFilter"><option value="all">All modes</option><option>Backtest</option><option>Demo</option><option>Eval</option><option>Funded</option></select></label>
+            <label>Session<select id="journalSessionFilter"><option value="all">All sessions</option></select></label>
+            <button class="button button-secondary button-small" id="journalExport"><span class="button-symbol">▦</span> Export workbook</button>
+          </section>
+          <section class="panel full-journal-panel">
+            <div class="table-wrap full-table-wrap">
+              <table class="full-trade-table">
+                <thead><tr><th>TRADE ID</th><th>DATE</th><th>MODE / ACCOUNT</th><th>INSTRUMENT</th><th>SESSION</th><th>DIRECTION</th><th>SETUP / STRATEGY</th><th>ENTRY</th><th>STOP LOSS</th><th>TAKE PROFIT</th><th>EXIT</th><th>EXIT TIME</th><th>RISK %</th><th>RISK $</th><th>PLANNED R:R</th><th>ACTUAL R</th><th>NET P&amp;L</th><th>OUTCOME</th><th>BEFORE CHART</th><th>AFTER CHART</th><th>PLAN ADHERENCE</th><th>MISTAKE TAG</th><th>NOTES</th><th></th></tr></thead>
+                <tbody id="fullTradeRows"></tbody>
+              </table>
+              <div class="empty-state" id="fullTradeEmpty"><div class="empty-state-mark">↗</div><strong>No trades logged yet</strong><span>Each row you add here is a full five-block trade record.</span><button class="button button-secondary button-small" data-add-trade>＋ Log your first trade</button></div>
+              <div class="no-results" id="fullNoResults" hidden>No trades match these filters.</div>
+            </div>
+            <div class="table-footer"><span id="fullTradeCount">Showing 0 trades</span><span>23 fields · Filtered locally</span></div>
+          </section>
+          <footer class="footer"><span>EDGEVAULT <b>·</b> ONE ROW PER TRADE.</span><span>Use JSON backups to transfer your data.</span></footer>
+        </section>
+
+        <section class="page-content page-view" id="page-strategy-library" data-page="strategy-library" hidden>
+          <section class="page-heading">
+            <div><p class="eyebrow">YOUR PLAYBOOK</p><h1>Strategies<span class="heading-dot">.</span></h1><p class="subheading">Standardize setup names and compare results across your trade history.</p></div>
+          </section>
+          <section class="panel strategy-library-panel">
+            <form id="strategyForm" class="strategy-add-form"><input name="strategyName" required maxlength="50" placeholder="Add a strategy name" aria-label="Strategy name"><button class="button button-primary button-small" type="submit">＋ Add strategy</button></form>
+            <div class="strategy-library-list" id="strategyLibraryList"></div>
+          </section>
+          <footer class="footer"><span>EDGEVAULT <b>·</b> YOUR PLAYBOOK.</span><span>Trade-linked strategies cannot be removed.</span></footer>
+        </section>
+
+        <section class="page-content page-view" id="page-prop-rules" data-page="prop-rules" hidden>
+          <section class="page-heading">
+            <div><p class="eyebrow">RISK FIRST</p><h1>Prop rules &amp; risk<span class="heading-dot">.</span></h1><p class="subheading">Model your evaluation limits and see the remaining buffer update with your trades.</p></div>
+          </section>
+          <section class="prop-layout">
+            <form class="panel prop-settings" id="propForm">
+              <div class="panel-heading"><div><h2>Account rules</h2><p>Set the numbers from your prop-firm plan.</p></div></div>
+              <label class="field">Account mode<select name="mode" id="propMode"><option>Backtest</option><option>Demo</option><option>Eval</option><option>Funded</option></select></label>
+              <label class="field">Starting account balance ($)<input name="startingBalance" type="number" min="0" step="any" required></label>
+              <label class="field">Daily loss limit (%)<input name="dailyLossPercent" type="number" min="0" max="100" step="any" required></label>
+              <label class="field">Max trailing drawdown (%)<input name="maxDrawdownPercent" type="number" min="0" max="100" step="any" required></label>
+              <label class="field">Profit target (%)<input name="profitTargetPercent" type="number" min="0" step="any" required></label>
+              <button class="button button-primary" type="submit">Save account rules <span>→</span></button>
+            </form>
+            <div class="prop-metrics">
+              <article class="stat-card"><div class="stat-top"><span class="stat-label">Today's net P&amp;L</span><span class="stat-icon mint">↗</span></div><div class="stat-value" id="propTodayPnl">$0.00</div><div class="stat-foot"><span class="muted">Selected account mode</span></div></article>
+              <article class="stat-card"><div class="stat-top"><span class="stat-label">Daily loss buffer</span><span class="stat-icon blue">◉</span></div><div class="stat-value" id="dailyBuffer">$0.00</div><div class="stat-foot"><span class="muted">Before daily loss limit</span></div></article>
+              <article class="stat-card"><div class="stat-top"><span class="stat-label">Trailing drawdown floor</span><span class="stat-icon violet">⌁</span></div><div class="stat-value" id="drawdownFloor">$0.00</div><div class="stat-foot"><span class="muted" id="currentEquity">Current equity $0.00</span></div></article>
+              <article class="stat-card"><div class="stat-top"><span class="stat-label">Target remaining</span><span class="stat-icon amber">◎</span></div><div class="stat-value" id="targetRemaining">$0.00</div><div class="stat-foot"><span class="muted">To reach profit target</span></div></article>
+            </div>
+          </section>
+          <section class="panel prop-history-panel"><div class="panel-heading"><div><h2>Account equity path</h2><p>Closed trades for the selected mode, ordered by date.</p></div></div><div id="propHistory" class="prop-history"></div></section>
+          <footer class="footer"><span>EDGEVAULT <b>·</b> PROTECT YOUR DRAWDOWN.</span><span>Rules are user-configured estimates, not prop-firm guarantees.</span></footer>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="tradeModal" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-heading"><div><p class="eyebrow">TRADE JOURNAL</p><h2 id="modalTitle">Log a trade</h2></div><button class="icon-button close-modal" aria-label="Close dialog">×</button></div>
+        <form id="tradeForm">
+          <div class="trade-id-line"><label class="field">Trade ID<input name="tradeId" readonly></label><label class="field">Trade date<input name="date" type="date" required></label></div>
+          <fieldset class="form-block"><legend><span>01</span> Context</legend><div class="form-grid">
+            <label class="field">Account mode<select name="mode" required><option>Backtest</option><option>Demo</option><option>Eval</option><option>Funded</option></select></label>
+            <label class="field">Account name <span class="optional">(optional)</span><input name="account" maxlength="40" placeholder="e.g. 50k Evaluation"></label>
+            <label class="field">Instrument<input name="symbol" required maxlength="20" placeholder="e.g. EURUSD, NQ, XAUUSD"></label>
+            <label class="field">Session<select name="session"><option value="">Select session</option><option>Asia</option><option>London</option><option>New York</option><option>London / New York overlap</option><option>Other</option></select></label>
+            <fieldset class="field side-field"><legend>Direction</legend><div class="segmented"><label><input type="radio" name="side" value="Long" checked><span>↗ Long</span></label><label><input type="radio" name="side" value="Short"><span>↘ Short</span></label></div></fieldset>
+          </div></fieldset>
+          <fieldset class="form-block"><legend><span>02</span> Execution</legend><div class="form-grid">
+            <label class="field">Setup / strategy<select name="strategy" id="strategySelect" required></select></label>
+            <label class="field">Entry price<input name="entry" type="number" step="any" min="0" required placeholder="0.00"></label>
+            <label class="field">Stop loss<input name="stopLoss" type="number" step="any" min="0" required placeholder="0.00"></label>
+            <label class="field">Take profit<input name="takeProfit" type="number" step="any" min="0" required placeholder="0.00"></label>
+            <label class="field">Exit price <span class="optional">(leave blank while open)</span><input name="exit" type="number" step="any" min="0" placeholder="0.00"></label>
+            <label class="field">Exit date &amp; time <span class="optional">(optional)</span><input name="exitTime" type="datetime-local"></label>
+          </div></fieldset>
+          <fieldset class="form-block"><legend><span>03</span> Prop risk &amp; math</legend><div class="form-grid">
+            <label class="field">Risk (%)<input name="riskPercent" type="number" step="any" min="0" max="100" required value="0.5"></label>
+            <label class="field">Risk ($)<input name="riskDollar" type="number" readonly></label>
+            <label class="field">Planned R:R<input name="plannedRR" readonly placeholder="Enter entry, stop, and target"></label>
+            <label class="field">Actual R-multiple<input name="actualR" readonly placeholder="Calculated when closed"></label>
+            <label class="field">Net P&amp;L ($) <span class="optional">(automatic estimate)</span><input name="netPnlPreview" readonly></label>
+            <label class="field">Manual P&amp;L override ($) <span class="optional">(commissions / partial exits)</span><input name="pnlOverride" type="number" step="any" placeholder="Leave blank to use estimate"></label>
+            <label class="field">Outcome<input name="outcome" readonly value="Open"></label>
+          </div><p class="form-hint">Risk $ uses the starting balance configured under Prop rules. Enter Net P&amp;L to override the automatic result for commissions or partial exits.</p></fieldset>
+          <fieldset class="form-block"><legend><span>04</span> Visual proof</legend><div class="form-grid">
+            <label class="field">Before chart link<input name="chartBefore" type="url" placeholder="https://www.tradingview.com/..."></label>
+            <label class="field">After chart link<input name="chartAfter" type="url" placeholder="https://www.tradingview.com/..."></label>
+          </div></fieldset>
+          <fieldset class="form-block"><legend><span>05</span> Review</legend><div class="form-grid">
+            <label class="field">Plan adherence<select name="planAdherence"><option value="">Not reviewed</option><option>Yes</option><option>No</option><option>Partial</option></select></label>
+            <label class="field">Mistake tag<select name="mistakeTag"><option value="">None / not tagged</option><option>FOMO</option><option>Moved SL</option><option>Early Exit</option><option>Late Entry</option><option>Oversized</option><option>Revenge Trade</option><option>Other</option></select></label>
+            <label class="field full-field">Notes<textarea name="notes" rows="3" maxlength="2000" placeholder="Thesis, execution notes, emotions, lessons learned..."></textarea></label>
+          </div></fieldset>
+          <div class="form-error" id="formError" role="alert" hidden></div>
+          <div class="modal-actions"><button type="button" class="button button-secondary close-modal">Cancel</button><button type="submit" class="button button-primary" id="saveTradeButton">Save trade <span>→</span></button></div>
+        </form>
+      </section>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="api-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
